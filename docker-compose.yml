@@ -1,3 +1,7 @@
+# VerityAI local stack.
+# Postgres is always available. API and frontend are optional Compose services.
+# Hardhat must run on the host (or a separate network) — see README.
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -17,5 +21,48 @@ services:
       timeout: 5s
       retries: 10
 
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: verityai-api
+    profiles: ["full"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_NAME: VerityAI
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg2://verityai:verityai@postgres:5432/verityai
+      CORS_ORIGINS: http://localhost:5173,http://localhost:8080
+      JWT_SECRET: change-me-verityai-dev-secret
+      STORAGE_PATH: /data/storage
+      # Host Hardhat via Docker Desktop / Linux host gateway
+      BLOCKCHAIN_RPC_URL: http://host.docker.internal:8545
+      BLOCKCHAIN_CHAIN_ID: 31337
+      BLOCKCHAIN_CONTRACT_ADDRESS: ${BLOCKCHAIN_CONTRACT_ADDRESS:-}
+      BLOCKCHAIN_PRIVATE_KEY: ${BLOCKCHAIN_PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+    volumes:
+      - verityai_storage:/data/storage
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    container_name: verityai-frontend
+    profiles: ["full"]
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
 volumes:
   verityai_pgdata:
+  verityai_storage:

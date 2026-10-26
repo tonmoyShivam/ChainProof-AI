@@ -4,7 +4,7 @@ Blockchain-based AI model provenance and integrity verification.
 
 This repository (`ChainProof-AI`) hosts the **VerityAI** academic MVP: register AI model fingerprints on a local EVM, verify integrity via SHA-256 comparison against on-chain records, and inspect provenance history.
 
-> **Milestone 7 (current):** Lightweight AI demo — safe JSON classifier, register/verify before predict, tamper mismatch demonstration. Evaluation polish is Milestone 8.
+> **Milestone 8 (current):** Evaluation & finalization — measured gas/latency, Docker packaging, security hardening, comprehensive docs, Definition of Done.
 
 ## Stack
 
@@ -19,12 +19,13 @@ This repository (`ChainProof-AI`) hosts the **VerityAI** academic MVP: register 
 ## Repository layout
 
 ```
-frontend/          React + Vite + Tailwind
-backend/           FastAPI application
-blockchain/        Hardhat workspace
+frontend/          React + Vite + Tailwind (+ Vitest helpers)
+backend/           FastAPI application, Alembic, evaluation scripts
+blockchain/        Hardhat workspace + gas measurement script
+examples/ai-demo/  Safe JSON classifier demo (success + mismatch)
 storage/           Off-chain model artifacts (gitignored contents)
-docs/              Project documentation
-docker-compose.yml PostgreSQL service
+docs/              Architecture, evaluation, security, DoD
+docker-compose.yml PostgreSQL (+ optional API/FE profile)
 .env.example       Environment placeholders only
 ```
 
@@ -48,7 +49,7 @@ cp frontend/.env.example frontend/.env
 
 Edit `.env` only if your ports or credentials differ. Do not put real wallet keys in the repo.
 
-### 2. Start PostgreSQL (recommended)
+### 2. Start PostgreSQL
 
 ```bash
 docker compose up -d postgres
@@ -60,32 +61,15 @@ Then set in `.env`:
 DATABASE_URL=postgresql+psycopg2://verityai:verityai@localhost:5432/verityai
 ```
 
-If Docker is unavailable (e.g. some cloud agent VMs), keep the SQLite default `DATABASE_URL=sqlite+pysqlite:///./verityai.db`. Schema and Alembic migrations are the same; automated tests use SQLite for portability.
+If Docker is unavailable, keep the SQLite default. Automated tests always use ephemeral SQLite.
 
-Verify Postgres: `docker compose ps` should show `verityai-postgres` healthy.
+Verify: `docker compose ps` should show `verityai-postgres` healthy.
 
-### 3. Backend
-
-```bash
-cd backend
-python3.12 -m venv .venv
-# Windows (PowerShell): .\.venv\Scripts\Activate.ps1
-# macOS/Linux:
-source .venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-- API docs: http://localhost:8000/docs
-- Health: http://localhost:8000/api/v1/health
-- Blockchain health: http://localhost:8000/api/v1/health/blockchain
-
-### 4. Local Hardhat node + contract deploy
+### 3. Local Hardhat node + contract deploy
 
 ```bash
 cd blockchain
-npm install
+npm ci
 npx hardhat node
 ```
 
@@ -94,100 +78,138 @@ In a second terminal:
 ```bash
 cd blockchain
 npx hardhat run scripts/deploy.js --network localhost
-# or: npm run deploy:localhost
 ```
 
-Copy the printed `ModelProvenance` address into `.env` as `BLOCKCHAIN_CONTRACT_ADDRESS`. Keep the Hardhat account #0 test key in `BLOCKCHAIN_PRIVATE_KEY` for local signing only.
+Copy the printed `ModelProvenance` address into `.env` as `BLOCKCHAIN_CONTRACT_ADDRESS`. Keep Hardhat account #0’s **public test** key in `BLOCKCHAIN_PRIVATE_KEY` for local signing only.
 
-With the node running, `GET /api/v1/health/blockchain` should report `"status": "ok"` and `"connected": true`. Without it, the endpoint correctly returns `"unavailable"` (never treated as a successful verification).
-
-Auth + register / verify (after backend is up):
+### 4. Backend
 
 ```bash
-curl -s -X POST http://localhost:8000/api/v1/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"dev@example.com","password":"password123","display_name":"Dev"}'
-TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"dev@example.com","password":"password123"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])')
-
-printf 'weights-v1' > /tmp/model.pt
-curl -s -H "Authorization: Bearer $TOKEN" \
-  -F "file=@/tmp/model.pt" -F "name=Demo" -F "version=1.0.0" \
-  http://localhost:8000/api/v1/models/register
-# use returned model_id:
-curl -s -F "file=@/tmp/model.pt" -F "model_id=<model_id>" \
-  http://localhost:8000/api/v1/models/verify
+cd backend
+python3.12 -m venv .venv
+source .venv/bin/activate   # Windows: .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+- API docs (OpenAPI): http://localhost:8000/docs  
+- ReDoc: http://localhost:8000/redoc  
+- Health: http://localhost:8000/api/v1/health  
+- Blockchain health: http://localhost:8000/api/v1/health/blockchain  
 
 ### 5. Frontend
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Open http://localhost:5173 — the home page shows VerityAI branding and live infrastructure status.
+Open http://localhost:5173.
 
-## Verify foundation + hashing
+### Optional: Compose API + frontend images
 
-With the backend running (and optionally Hardhat + Postgres):
+With Postgres + a host Hardhat node (and `BLOCKCHAIN_CONTRACT_ADDRESS` exported):
 
 ```bash
-# Application health
-curl -s http://localhost:8000/api/v1/health
+export BLOCKCHAIN_CONTRACT_ADDRESS=0xYourDeployedAddress
+docker compose --profile full up -d --build
+```
 
-# Blockchain RPC probe
-curl -s http://localhost:8000/api/v1/health/blockchain
+- API: http://localhost:8000  
+- Frontend (nginx): http://localhost:8080  
 
-# Hash an allowed artifact (example)
-printf 'demo-weights' > /tmp/demo.pt
-curl -s -F "file=@/tmp/demo.pt;type=application/octet-stream" \
-  http://localhost:8000/api/v1/artifacts/hash
+Hardhat is **not** containerized by default (RPC ergonomics). Prefer host `npx hardhat node` for demos.
 
-# Backend tests (health + hashing + storage)
+## Demo (success + mismatch)
+
+See [`examples/ai-demo/README.md`](examples/ai-demo/README.md) and [`docs/ai-demo.md`](docs/ai-demo.md).
+
+```bash
+# Offline integrity path (no chain)
+cd examples/ai-demo
+python run_e2e_demo.py --skip-register
+
+# Full path with running API + Hardhat
+python run_e2e_demo.py
+```
+
+Expected: register → verify match → predict OK; one-byte tamper → verify mismatch → predict refused.
+
+## Testing
+
+```bash
+# Backend
 cd backend && source .venv/bin/activate && pytest -q
 
-# Smart contract tests
-cd ../blockchain && npx hardhat test
+# Smart contracts
+cd blockchain && npx hardhat test
+
+# Frontend primary helpers
+cd frontend && npm ci && npm test
 ```
 
-Expected `/api/v1/health` payload shape:
+## Evaluation (latency & gas)
 
-```json
-{ "status": "ok", "service": "VerityAI", "environment": "development" }
+**Never fabricate metrics.** Use the scripts and procedure in [`docs/evaluation.md`](docs/evaluation.md).
+
+```bash
+cd blockchain && npm run measure:gas
+cd backend && python scripts/evaluate_latency.py --repeats 20 --size-kb 256 \
+  --file ../examples/ai-demo/artifacts/demo_sentiment.json
 ```
 
-## Dependency pinning
+A measured snapshot from the M8 environment: [`docs/evaluation-results.json`](docs/evaluation-results.json).
 
-- Backend: `backend/requirements.txt` (exact versions)
-- Frontend: `frontend/package-lock.json`
-- Blockchain: `blockchain/package-lock.json`
+## Configuration
 
-Commit lockfiles; reinstall with `npm ci` / `pip install -r requirements.txt` for reproducible setups.
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | SQLAlchemy URL (Postgres or SQLite) |
+| `JWT_SECRET` | HS256 secret (required strong when `APP_ENV=production`) |
+| `BLOCKCHAIN_RPC_URL` | Hardhat RPC (default `http://127.0.0.1:8545`) |
+| `BLOCKCHAIN_CONTRACT_ADDRESS` | Deployed `ModelProvenance` |
+| `BLOCKCHAIN_PRIVATE_KEY` | Local signer (Hardhat #0 test key only) |
+| `STORAGE_PATH` | Off-chain artifact directory |
+| `CORS_ORIGINS` | Comma-separated browser origins |
+| `RATE_LIMIT_AUTH_PER_MINUTE` | Auth endpoint limit (default 30) |
+| `VITE_API_BASE_URL` | Frontend → API base |
+
+## Documentation
+
+| Doc | Content |
+| --- | --- |
+| [`docs/architecture.md`](docs/architecture.md) | Component diagram + OpenAPI pointers |
+| [`docs/evaluation.md`](docs/evaluation.md) | How to measure latency/gas |
+| [`docs/security.md`](docs/security.md) | Hardening + honest limitations |
+| [`docs/definition-of-done.md`](docs/definition-of-done.md) | PRD §16 checklist |
+| [`docs/ai-demo.md`](docs/ai-demo.md) | AI demo overview |
 
 ## Milestone roadmap
 
 | Milestone | Focus |
 | --- | --- |
-| 1 | Foundation (merged) |
-| 2 | SHA-256 hashing, upload validation, local storage (merged) |
-| 3 | `ModelProvenance.sol`, Hardhat tests, local deploy (merged) |
-| 4 | Web3.py registration / verification integration (merged) |
-| 5 | PostgreSQL models, Alembic, auth, full API (merged) |
-| 6 | Dashboard, register/verify UI, history pages (merged) |
-| **7** | Lightweight AI demo model (this PR) |
-| 8 | Tests, evaluation, Docker packaging, report |
+| 1–7 | Foundation → hashing → contract → Web3 → DB/API → frontend → AI demo (merged) |
+| **8** | Tests, measured evaluation, Docker, security notes, final docs (this PR) |
 
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Frontend health shows API error | Backend not running / CORS | Start uvicorn; confirm `CORS_ORIGINS` includes `http://localhost:5173` |
-| Blockchain health `unavailable` | Hardhat node not started | `cd blockchain && npx hardhat node` |
+| Frontend health shows API error | Backend down / CORS | Start uvicorn; confirm `CORS_ORIGINS` includes `http://localhost:5173` |
+| Blockchain health `unavailable` | Hardhat not started / wrong address | `npx hardhat node` then redeploy; update `BLOCKCHAIN_CONTRACT_ADDRESS` |
 | Postgres connection refused | Compose not up | `docker compose up -d postgres` |
-| Port 5432 / 8000 / 8545 in use | Local conflict | Stop the other process or change ports in `.env` / compose |
+| `Refusing to start: JWT_SECRET` | Production env with weak secret | Set a strong `JWT_SECRET` or use `APP_ENV=development` locally |
+| Auth `429 Too many requests` | Rate limit | Wait ~60s or raise `RATE_LIMIT_AUTH_PER_MINUTE` |
+| Compose API cannot reach chain | Host RPC unreachable | Ensure Hardhat on host `:8545`; Linux needs `extra_hosts` (already set) |
+| Port 5432 / 8000 / 8545 / 5173 in use | Local conflict | Stop the other process or change ports |
+
+## Dependency pinning
+
+- Backend: `backend/requirements.txt`
+- Frontend: `frontend/package-lock.json`
+- Blockchain: `blockchain/package-lock.json`
 
 ## License
 

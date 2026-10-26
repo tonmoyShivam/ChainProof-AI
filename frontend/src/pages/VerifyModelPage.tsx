@@ -9,12 +9,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ApiError, api } from '@/services/api';
 import type { VerificationResult } from '@/types/api';
+import { classifyVerification, verificationHeadline } from '@/utils/verification';
 
 function statusVariant(status: VerificationResult['status']) {
   if (status === 'VERIFIED') return 'ok' as const;
   if (status === 'INTEGRITY_MISMATCH') return 'fail' as const;
   if (status === 'VERIFICATION_UNAVAILABLE') return 'pending' as const;
   return 'muted' as const;
+}
+
+function outcomeFromResult(result: VerificationResult) {
+  const match =
+    result.status === 'VERIFIED' ? true : result.status === 'INTEGRITY_MISMATCH' ? false : null;
+  return classifyVerification({
+    match,
+    blockchainAvailable: result.status !== 'VERIFICATION_UNAVAILABLE',
+    errorCode: result.status === 'MODEL_NOT_FOUND' ? result.status : null,
+  });
 }
 
 export function VerifyModelPage() {
@@ -99,7 +110,7 @@ export function VerifyModelPage() {
       {result && (
         <Card>
           <div className="flex items-center justify-between gap-3">
-            <CardTitle>Result</CardTitle>
+            <CardTitle>{verificationHeadline(outcomeFromResult(result))}</CardTitle>
             <Badge variant={statusVariant(result.status)}>{result.status}</Badge>
           </div>
           <p className="mt-2 text-sm text-slate-300">{result.detail}</p>

@@ -1,0 +1,33 @@
+{
+  "note": "Snapshot measured in the Milestone 8 cloud agent environment. Re-run scripts for your machine; do not treat these as SLAs.",
+  "gas": {
+    "network": "hardhat",
+    "chainId": 31337,
+    "measuredAt": "2026-10-26T15:15:46.751Z",
+    "registerModel": 185433,
+    "registerVersion": 212948,
+    "verifyModelEstimate": 26783,
+    "command": "cd blockchain && npx hardhat run scripts/measure_gas.js"
+  },
+  "latency": {
+    "measuredAt": "2026-10-26T15:15:46Z",
+    "hash_sha256_in_memory": {
+      "payload_bytes": 262144,
+      "runs": 10,
+      "min_s": 0.0001727640001263353,
+      "max_s": 0.00018640300004335586,
+      "mean_s": 0.00017530220011394704,
+      "median_s": 0.00017397650003658782
+    },
+    "hash_sha256_file": {
+      "path": "examples/ai-demo/artifacts/demo_sentiment.json",
+      "payload_bytes": 2241,
+      "runs": 10,
+      "min_s": 7.292000191227999e-06,
+      "max_s": 7.1574000230612e-05,
+      "mean_s": 1.5836000102353864e-05,
+      "median_s": 7.829000196579727e-06
+    },
+    "command": "cd backend && python scripts/evaluate_latency.py --repeats 10 --size-kb 256 --file ../examples/ai-demo/artifacts/demo_sentiment.json"
+  }
+}

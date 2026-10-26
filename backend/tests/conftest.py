@@ -22,6 +22,7 @@ def tmp_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv("MAX_UPLOAD_SIZE_MB", "5")
     monkeypatch.setenv("ALLOWED_UPLOAD_EXTENSIONS", ".pt,.txt,.onnx,.json")
     monkeypatch.setenv("JWT_SECRET", "test-secret")
+    monkeypatch.setenv("APP_ENV", "test")
     monkeypatch.setenv(
         "BLOCKCHAIN_PRIVATE_KEY",
         "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",

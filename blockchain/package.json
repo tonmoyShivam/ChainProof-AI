@@ -9,7 +9,8 @@
     "test": "hardhat test",
     "clean": "hardhat clean",
     "deploy": "hardhat run scripts/deploy.js",
-    "deploy:localhost": "hardhat run scripts/deploy.js --network localhost"
+    "deploy:localhost": "hardhat run scripts/deploy.js --network localhost",
+    "measure:gas": "hardhat run scripts/measure_gas.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.2",
