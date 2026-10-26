@@ -14,7 +14,7 @@ React (Vite)  →  FastAPI (/api/v1)  →  PostgreSQL
 
 | Layer | Path | Role in M1 |
 | --- | --- | --- |
-| Frontend | `frontend/` | Vite + React + Tailwind scaffold; home page health probes |
+| Frontend | `frontend/` | React dashboard (auth, register/verify, details, history) |
 | Backend | `backend/` | FastAPI + JWT auth + full `/api/v1` model/dashboard APIs |
 | Blockchain | `blockchain/` | Hardhat 2.22 + `ModelProvenance.sol`; Web3.py register/verify |
 | Database | `docker-compose.yml` | PostgreSQL 16 (SQLite fallback for local/tests) |

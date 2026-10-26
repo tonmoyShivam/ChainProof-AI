@@ -4,7 +4,7 @@ Blockchain-based AI model provenance and integrity verification.
 
 This repository (`ChainProof-AI`) hosts the **VerityAI** academic MVP: register AI model fingerprints on a local EVM, verify integrity via SHA-256 comparison against on-chain records, and inspect provenance history.
 
-> **Milestone 5 (current):** PostgreSQL/SQLAlchemy schema, Alembic migrations, JWT auth, and complete `/api/v1` registration/verification/dashboard APIs. React dashboard UI is Milestone 6.
+> **Milestone 6 (current):** React dashboard against real `/api/v1` APIs — landing, auth, register/verify, details, history, settings. AI demo is Milestone 7.
 
 ## Stack
 
@@ -175,8 +175,8 @@ Commit lockfiles; reinstall with `npm ci` / `pip install -r requirements.txt` fo
 | 2 | SHA-256 hashing, upload validation, local storage (merged) |
 | 3 | `ModelProvenance.sol`, Hardhat tests, local deploy (merged) |
 | 4 | Web3.py registration / verification integration (merged) |
-| **5** | PostgreSQL models, Alembic, auth, full API (this PR) |
-| 6 | Dashboard, register/verify UI, history pages |
+| 5 | PostgreSQL models, Alembic, auth, full API (merged) |
+| **6** | Dashboard, register/verify UI, history pages (this PR) |
 | 7 | Lightweight AI demo model |
 | 8 | Tests, evaluation, Docker packaging, report |
 

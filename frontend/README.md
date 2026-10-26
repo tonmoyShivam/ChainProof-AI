@@ -1,13 +1,18 @@
 # VerityAI Frontend
 
-React + TypeScript + Vite + Tailwind CSS dashboard scaffold.
+React + TypeScript + Vite + Tailwind dashboard for VerityAI.
 
-## Milestone 1 status
+## Milestone 6 status
 
-- Vite + React + TypeScript project
-- Tailwind CSS configured with VerityAI design tokens
-- Folder layout: `components/`, `layouts/`, `pages/`, `hooks/`, `services/`, `types/`, `utils/`
-- Home page polls backend health endpoints (no auth UI yet)
+Pages wired to real `/api/v1` endpoints:
+
+- Landing, login, registration
+- Dashboard (live stats + recent activity)
+- Register model / verify model
+- Model details + version history
+- Settings (profile, logout, wallet placeholder)
+
+Stack extras: TanStack Query, React Router, React Hook Form + Zod, Lucide icons, shadcn-style UI primitives.
 
 ## Commands
 
@@ -18,3 +23,9 @@ npm run dev
 ```
 
 App: http://localhost:5173
+
+Ensure the FastAPI backend is running on port 8000 (Vite proxies `/api`). Copy `frontend/.env.example` to `.env` if you need a custom `VITE_API_BASE_URL`.
+
+```bash
+npm run build
+```
