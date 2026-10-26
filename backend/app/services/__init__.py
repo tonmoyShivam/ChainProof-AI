@@ -1,1 +1,1 @@
-"""Domain services (hashing, registration, verification — later milestones)."""
+"""Domain services (hashing available; registration/verification in later milestones)."""

@@ -4,7 +4,7 @@ Blockchain-based AI model provenance and integrity verification.
 
 This repository (`ChainProof-AI`) hosts the **VerityAI** academic MVP: register AI model fingerprints on a local EVM, verify integrity via SHA-256 comparison against on-chain records, and inspect provenance history.
 
-> **Milestone 1 (current):** project foundation — layout, React/FastAPI/Hardhat/PostgreSQL scaffolding, env templates, and health endpoints. Hashing, contracts, auth UI, and registration come in later milestones.
+> **Milestone 2 (current):** SHA-256 hashing, upload validation, and safe local storage, plus health endpoints from Milestone 1. Smart contracts, auth, and full registration come later.
 
 ## Stack
 
@@ -92,7 +92,7 @@ npm run dev
 
 Open http://localhost:5173 — the home page shows VerityAI branding and live infrastructure status.
 
-## Verify foundation
+## Verify foundation + hashing
 
 With the backend running (and optionally Hardhat + Postgres):
 
@@ -103,7 +103,12 @@ curl -s http://localhost:8000/api/v1/health
 # Blockchain RPC probe
 curl -s http://localhost:8000/api/v1/health/blockchain
 
-# Backend smoke tests
+# Hash an allowed artifact (example)
+printf 'demo-weights' > /tmp/demo.pt
+curl -s -F "file=@/tmp/demo.pt;type=application/octet-stream" \
+  http://localhost:8000/api/v1/artifacts/hash
+
+# Backend tests (health + hashing + storage)
 cd backend && source .venv/bin/activate && pytest -q
 ```
 
@@ -125,8 +130,8 @@ Commit lockfiles; reinstall with `npm ci` / `pip install -r requirements.txt` fo
 
 | Milestone | Focus |
 | --- | --- |
-| **1** | Foundation (this PR) |
-| 2 | SHA-256 hashing, upload validation, local storage |
+| 1 | Foundation (merged) |
+| **2** | SHA-256 hashing, upload validation, local storage (this PR) |
 | 3 | `ModelProvenance.sol`, Hardhat tests, local deploy |
 | 4 | Web3.py registration / verification integration |
 | 5 | PostgreSQL models, Alembic, auth, full API |

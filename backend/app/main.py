@@ -13,9 +13,9 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         description=(
             "Blockchain-based AI model provenance and integrity verification API. "
-            "Milestone 1 foundation: health checks and project scaffolding."
+            "Milestone 2: SHA-256 hashing, upload validation, and safe local storage."
         ),
-        version="0.1.0",
+        version="0.2.0",
         docs_url="/docs",
         redoc_url="/redoc",
     )

@@ -30,10 +30,26 @@ class Settings(BaseSettings):
 
     storage_path: str = "../storage"
     max_upload_size_mb: int = 100
+    # Comma-separated extensions including the leading dot (AI model artifact types).
+    allowed_upload_extensions: str = (
+        ".pt,.pth,.onnx,.h5,.hdf5,.pb,.tflite,.pkl,.joblib,.safetensors,.bin,.gguf,.json,.txt"
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def max_upload_size_bytes(self) -> int:
+        return self.max_upload_size_mb * 1024 * 1024
+
+    @property
+    def allowed_extension_set(self) -> set[str]:
+        return {
+            ext.strip().lower()
+            for ext in self.allowed_upload_extensions.split(",")
+            if ext.strip()
+        }
 
 
 @lru_cache
