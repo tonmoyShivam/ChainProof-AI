@@ -13,6 +13,8 @@ backend/.mypy_cache/
 backend/*.egg-info/
 backend/dist/
 backend/build/
+backend/*.db
+*.db
 *.egg-info/
 
 # Node / frontend / blockchain

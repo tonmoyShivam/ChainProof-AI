@@ -1,1 +1,1 @@
-"""Web3 / contract integration helpers (Milestone 4)."""
+"""Web3 / contract integration helpers."""

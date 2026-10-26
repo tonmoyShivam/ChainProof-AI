@@ -4,7 +4,7 @@ Blockchain-based AI model provenance and integrity verification.
 
 This repository (`ChainProof-AI`) hosts the **VerityAI** academic MVP: register AI model fingerprints on a local EVM, verify integrity via SHA-256 comparison against on-chain records, and inspect provenance history.
 
-> **Milestone 3 (current):** `ModelProvenance` smart contract, Hardhat tests, and local EVM deploy. Backend Web3 registration is Milestone 4.
+> **Milestone 4 (current):** Web3.py registration/verification against `ModelProvenance` on local Hardhat. Full auth UI and Alembic land in later milestones.
 
 ## Stack
 
@@ -88,9 +88,20 @@ npx hardhat run scripts/deploy.js --network localhost
 # or: npm run deploy:localhost
 ```
 
-Copy the printed `ModelProvenance` address into `.env` as `BLOCKCHAIN_CONTRACT_ADDRESS`.
+Copy the printed `ModelProvenance` address into `.env` as `BLOCKCHAIN_CONTRACT_ADDRESS`. Keep the Hardhat account #0 test key in `BLOCKCHAIN_PRIVATE_KEY` for local signing only.
 
 With the node running, `GET /api/v1/health/blockchain` should report `"status": "ok"` and `"connected": true`. Without it, the endpoint correctly returns `"unavailable"` (never treated as a successful verification).
+
+Register / verify (after backend is up):
+
+```bash
+printf 'weights-v1' > /tmp/model.pt
+curl -s -F "file=@/tmp/model.pt" -F "name=Demo" -F "version=1.0.0" \
+  http://localhost:8000/api/v1/models/register
+# use returned model_id:
+curl -s -F "file=@/tmp/model.pt" -F "model_id=<model_id>" \
+  http://localhost:8000/api/v1/models/verify
+```
 
 ### 5. Frontend
 
@@ -145,8 +156,8 @@ Commit lockfiles; reinstall with `npm ci` / `pip install -r requirements.txt` fo
 | --- | --- |
 | 1 | Foundation (merged) |
 | 2 | SHA-256 hashing, upload validation, local storage (merged) |
-| **3** | `ModelProvenance.sol`, Hardhat tests, local deploy (this PR) |
-| 4 | Web3.py registration / verification integration |
+| 3 | `ModelProvenance.sol`, Hardhat tests, local deploy (merged) |
+| **4** | Web3.py registration / verification integration (this PR) |
 | 5 | PostgreSQL models, Alembic, auth, full API |
 | 6 | Dashboard, register/verify UI, history pages |
 | 7 | Lightweight AI demo model |

@@ -1,10 +1,19 @@
 """VerityAI FastAPI application entrypoint."""
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.db import init_db
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    init_db()
+    yield
 
 
 def create_app() -> FastAPI:
@@ -13,11 +22,12 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         description=(
             "Blockchain-based AI model provenance and integrity verification API. "
-            "Milestone 2: SHA-256 hashing, upload validation, and safe local storage."
+            "Milestone 4: Web3.py registration and verification against ModelProvenance."
         ),
-        version="0.2.0",
+        version="0.4.0",
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=lifespan,
     )
 
     application.add_middleware(

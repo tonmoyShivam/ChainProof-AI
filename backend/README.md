@@ -9,6 +9,11 @@ Python 3.12 FastAPI service for AI model provenance and integrity verification.
 - **Milestone 2:** chunked SHA-256, upload validation, safe local storage
   - `POST /api/v1/artifacts/hash` — validate + hash (no storage)
   - `POST /api/v1/artifacts/upload` — validate + hash + store under `storage/artifacts/`
+- **Milestone 4:** Web3.py ↔ `ModelProvenance`
+  - `POST /api/v1/models/register` — hash, store, submit tx, wait for confirmation, persist
+  - `POST /api/v1/models/verify` — compare upload to on-chain fingerprint
+  - `GET /api/v1/models`, `GET /api/v1/models/{model_id}`, `POST /api/v1/models/{id}/versions`
+  - Verification statuses: `VERIFIED`, `INTEGRITY_MISMATCH`, `MODEL_NOT_FOUND`, `VERIFICATION_UNAVAILABLE`
 - Settings via environment variables (see root `.env.example`)
 
 ## Local setup

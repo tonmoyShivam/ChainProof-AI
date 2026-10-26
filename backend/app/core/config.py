@@ -19,14 +19,15 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
     cors_origins: str = "http://localhost:5173"
 
-    database_url: str = (
-        "postgresql+psycopg2://verityai:verityai@localhost:5432/verityai"
-    )
+    # Milestone 4 uses SQLite by default; switch to Postgres in Milestone 5+.
+    database_url: str = "sqlite+pysqlite:///./verityai.db"
 
     blockchain_rpc_url: str = "http://127.0.0.1:8545"
     blockchain_chain_id: int = 31337
     blockchain_contract_address: str = ""
+    # Local Hardhat account #0 — public test key only; never a real wallet.
     blockchain_private_key: str = ""
+    blockchain_tx_timeout_seconds: int = 60
 
     storage_path: str = "../storage"
     max_upload_size_mb: int = 100
