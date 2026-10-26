@@ -9,11 +9,11 @@ Python 3.12 FastAPI service for AI model provenance and integrity verification.
 - **Milestone 2:** chunked SHA-256, upload validation, safe local storage
   - `POST /api/v1/artifacts/hash` — validate + hash (no storage)
   - `POST /api/v1/artifacts/upload` — validate + hash + store under `storage/artifacts/`
-- **Milestone 4:** Web3.py ↔ `ModelProvenance`
-  - `POST /api/v1/models/register` — hash, store, submit tx, wait for confirmation, persist
-  - `POST /api/v1/models/verify` — compare upload to on-chain fingerprint
-  - `GET /api/v1/models`, `GET /api/v1/models/{model_id}`, `POST /api/v1/models/{id}/versions`
-  - Verification statuses: `VERIFIED`, `INTEGRITY_MISMATCH`, `MODEL_NOT_FOUND`, `VERIFICATION_UNAVAILABLE`
+- **Milestone 4:** Web3.py ↔ `ModelProvenance` register/verify
+- **Milestone 5:** SQLAlchemy users/models/versions/verification_logs, Alembic, JWT auth, dashboard APIs
+  - Auth: `POST /auth/register|login|logout`, `GET /auth/me`
+  - Models: register/list/get/versions/history/verify/verification-history
+  - Dashboard: `GET /dashboard/stats`, `GET /dashboard/recent-activity` (real aggregates)
 - Settings via environment variables (see root `.env.example`)
 
 ## Local setup
@@ -23,6 +23,7 @@ cd backend
 python3.12 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+alembic upgrade head
 # Prefer repo-root .env; STORAGE_PATH should point at ../storage from backend/
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```

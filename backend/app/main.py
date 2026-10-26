@@ -22,9 +22,9 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         description=(
             "Blockchain-based AI model provenance and integrity verification API. "
-            "Milestone 4: Web3.py registration and verification against ModelProvenance."
+            "Milestone 5: PostgreSQL schema, Alembic, authentication, and full API surface."
         ),
-        version="0.4.0",
+        version="0.5.0",
         docs_url="/docs",
         redoc_url="/redoc",
         lifespan=lifespan,

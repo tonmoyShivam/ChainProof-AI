@@ -1,5 +1,5 @@
 """Data access repositories."""
 
-from app.repositories import registrations
+from app.repositories import models, users, verifications
 
-__all__ = ["registrations"]
+__all__ = ["users", "models", "verifications"]

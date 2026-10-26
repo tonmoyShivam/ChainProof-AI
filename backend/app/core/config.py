@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
     cors_origins: str = "http://localhost:5173"
 
-    # Milestone 4 uses SQLite by default; switch to Postgres in Milestone 5+.
+    # Prefer Postgres via docker-compose; SQLite remains available for local/tests.
     database_url: str = "sqlite+pysqlite:///./verityai.db"
 
     blockchain_rpc_url: str = "http://127.0.0.1:8545"
@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     # Local Hardhat account #0 — public test key only; never a real wallet.
     blockchain_private_key: str = ""
     blockchain_tx_timeout_seconds: int = 60
+
+    jwt_secret: str = "change-me-verityai-dev-secret"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
 
     storage_path: str = "../storage"
     max_upload_size_mb: int = 100

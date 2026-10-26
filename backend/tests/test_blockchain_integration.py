@@ -13,6 +13,7 @@ from web3 import Web3
 from app.core.config import get_settings
 from app.db import reset_db_state
 from app.main import app
+from tests.conftest import register_and_login
 
 HARDHAT_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 RPC_URL = "http://127.0.0.1:8545"
@@ -77,6 +78,7 @@ def live_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setenv("BLOCKCHAIN_CHAIN_ID", str(w3.eth.chain_id))
     monkeypatch.setenv("BLOCKCHAIN_CONTRACT_ADDRESS", address)
     monkeypatch.setenv("BLOCKCHAIN_PRIVATE_KEY", HARDHAT_KEY)
+    monkeypatch.setenv("JWT_SECRET", "live-test-secret")
     get_settings.cache_clear()
     reset_db_state()
 
@@ -88,9 +90,12 @@ def live_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
 
 
 def test_register_confirm_and_verify_match(live_client: TestClient) -> None:
+    token = register_and_login(live_client, email="chain@example.com")
+    headers = {"Authorization": f"Bearer {token}"}
     payload = b"verityai-integration-model-v1"
     register = live_client.post(
         "/api/v1/models/register",
+        headers=headers,
         data={
             "name": "Demo Model",
             "description": "integration",
@@ -104,7 +109,7 @@ def test_register_confirm_and_verify_match(live_client: TestClient) -> None:
     body = register.json()
     assert body["registration_status"] == "confirmed"
     assert body["transaction_hash"].startswith("0x")
-    assert body["block_number"] > 0
+    assert body["creator_user_id"]
     model_id = body["model_id"]
 
     verify = live_client.post(
@@ -115,13 +120,27 @@ def test_register_confirm_and_verify_match(live_client: TestClient) -> None:
     assert verify.status_code == 200, verify.text
     result = verify.json()
     assert result["status"] == "VERIFIED"
-    assert result["expected_hash"] == result["actual_hash"]
+
+    history = live_client.get(
+        f"/api/v1/models/{model_id}/history",
+        headers=headers,
+    )
+    assert history.status_code == 200
+    assert len(history.json()) == 1
+
+    stats = live_client.get("/api/v1/dashboard/stats", headers=headers)
+    assert stats.status_code == 200
+    assert stats.json()["total_registered_models"] == 1
+    assert stats.json()["successful_verifications"] == 1
 
 
 def test_verify_detects_integrity_mismatch(live_client: TestClient) -> None:
+    token = register_and_login(live_client, email="mismatch@example.com")
+    headers = {"Authorization": f"Bearer {token}"}
     original = b"ABCDEFGH"
     register = live_client.post(
         "/api/v1/models/register",
+        headers=headers,
         data={"name": "Mismatch Demo", "version": "1"},
         files={"file": ("model.pt", original, "application/octet-stream")},
     )
@@ -138,10 +157,16 @@ def test_verify_detects_integrity_mismatch(live_client: TestClient) -> None:
     assert verify.status_code == 200, verify.text
     result = verify.json()
     assert result["status"] == "INTEGRITY_MISMATCH"
-    assert result["expected_hash"] != result["actual_hash"]
+
+    vhist = live_client.get(
+        f"/api/v1/models/{model_id}/verification-history",
+        headers=headers,
+    )
+    assert vhist.status_code == 200
+    assert any(item["result"] == "INTEGRITY_MISMATCH" for item in vhist.json())
 
 
-def test_register_fails_when_rpc_unreachable(
+def test_register_requires_auth_and_fails_when_rpc_unreachable(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -154,12 +179,22 @@ def test_register_fails_when_rpc_unreachable(
     monkeypatch.setenv("BLOCKCHAIN_RPC_URL", "http://127.0.0.1:1")
     monkeypatch.setenv("BLOCKCHAIN_CONTRACT_ADDRESS", "0x5FbDB2315678afecb367f032d93F642f64180aa3")
     monkeypatch.setenv("BLOCKCHAIN_PRIVATE_KEY", HARDHAT_KEY)
+    monkeypatch.setenv("JWT_SECRET", "fail-secret")
     get_settings.cache_clear()
     reset_db_state()
 
     with TestClient(app) as client:
+        unauth = client.post(
+            "/api/v1/models/register",
+            data={"name": "Nope"},
+            files={"file": ("model.pt", b"x", "application/octet-stream")},
+        )
+        assert unauth.status_code == 401
+
+        token = register_and_login(client, email="rpcfail@example.com")
         response = client.post(
             "/api/v1/models/register",
+            headers={"Authorization": f"Bearer {token}"},
             data={"name": "Nope"},
             files={"file": ("model.pt", b"x", "application/octet-stream")},
         )

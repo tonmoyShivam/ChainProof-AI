@@ -4,7 +4,7 @@ Blockchain-based AI model provenance and integrity verification.
 
 This repository (`ChainProof-AI`) hosts the **VerityAI** academic MVP: register AI model fingerprints on a local EVM, verify integrity via SHA-256 comparison against on-chain records, and inspect provenance history.
 
-> **Milestone 4 (current):** Web3.py registration/verification against `ModelProvenance` on local Hardhat. Full auth UI and Alembic land in later milestones.
+> **Milestone 5 (current):** PostgreSQL/SQLAlchemy schema, Alembic migrations, JWT auth, and complete `/api/v1` registration/verification/dashboard APIs. React dashboard UI is Milestone 6.
 
 ## Stack
 
@@ -48,13 +48,21 @@ cp frontend/.env.example frontend/.env
 
 Edit `.env` only if your ports or credentials differ. Do not put real wallet keys in the repo.
 
-### 2. Start PostgreSQL
+### 2. Start PostgreSQL (recommended)
 
 ```bash
 docker compose up -d postgres
 ```
 
-Verify: `docker compose ps` should show `verityai-postgres` healthy.
+Then set in `.env`:
+
+```bash
+DATABASE_URL=postgresql+psycopg2://verityai:verityai@localhost:5432/verityai
+```
+
+If Docker is unavailable (e.g. some cloud agent VMs), keep the SQLite default `DATABASE_URL=sqlite+pysqlite:///./verityai.db`. Schema and Alembic migrations are the same; automated tests use SQLite for portability.
+
+Verify Postgres: `docker compose ps` should show `verityai-postgres` healthy.
 
 ### 3. Backend
 
@@ -65,6 +73,7 @@ python3.12 -m venv .venv
 # macOS/Linux:
 source .venv/bin/activate
 pip install -r requirements.txt
+alembic upgrade head
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -92,11 +101,19 @@ Copy the printed `ModelProvenance` address into `.env` as `BLOCKCHAIN_CONTRACT_A
 
 With the node running, `GET /api/v1/health/blockchain` should report `"status": "ok"` and `"connected": true`. Without it, the endpoint correctly returns `"unavailable"` (never treated as a successful verification).
 
-Register / verify (after backend is up):
+Auth + register / verify (after backend is up):
 
 ```bash
+curl -s -X POST http://localhost:8000/api/v1/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"dev@example.com","password":"password123","display_name":"Dev"}'
+TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"dev@example.com","password":"password123"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["access_token"])')
+
 printf 'weights-v1' > /tmp/model.pt
-curl -s -F "file=@/tmp/model.pt" -F "name=Demo" -F "version=1.0.0" \
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -F "file=@/tmp/model.pt" -F "name=Demo" -F "version=1.0.0" \
   http://localhost:8000/api/v1/models/register
 # use returned model_id:
 curl -s -F "file=@/tmp/model.pt" -F "model_id=<model_id>" \
@@ -157,8 +174,8 @@ Commit lockfiles; reinstall with `npm ci` / `pip install -r requirements.txt` fo
 | 1 | Foundation (merged) |
 | 2 | SHA-256 hashing, upload validation, local storage (merged) |
 | 3 | `ModelProvenance.sol`, Hardhat tests, local deploy (merged) |
-| **4** | Web3.py registration / verification integration (this PR) |
-| 5 | PostgreSQL models, Alembic, auth, full API |
+| 4 | Web3.py registration / verification integration (merged) |
+| **5** | PostgreSQL models, Alembic, auth, full API (this PR) |
 | 6 | Dashboard, register/verify UI, history pages |
 | 7 | Lightweight AI demo model |
 | 8 | Tests, evaluation, Docker packaging, report |
