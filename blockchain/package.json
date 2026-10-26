@@ -1,0 +1,16 @@
+{
+  "name": "verityai-blockchain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VerityAI Hardhat workspace for model provenance contracts",
+  "scripts": {
+    "compile": "hardhat compile",
+    "node": "hardhat node",
+    "test": "hardhat test",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "5.0.0",
+    "hardhat": "2.22.17"
+  }
+}

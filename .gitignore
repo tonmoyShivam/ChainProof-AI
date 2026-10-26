@@ -1,0 +1,48 @@
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Python
+backend/.venv/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/*.egg-info/
+backend/dist/
+backend/build/
+*.egg-info/
+
+# Node / frontend / blockchain
+node_modules/
+frontend/dist/
+frontend/.vite/
+blockchain/cache/
+blockchain/artifacts/
+blockchain/typechain-types/
+blockchain/coverage/
+*.tsbuildinfo
+
+# Uploaded model artifacts (keep directory)
+storage/**
+!storage/.gitkeep
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and coverage
+*.log
+coverage/
+htmlcov/
+.coverage
+.nyc_output/
+
+# Docker volumes / local data
+pgdata/
