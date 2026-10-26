@@ -4,7 +4,7 @@ Blockchain-based AI model provenance and integrity verification.
 
 This repository (`ChainProof-AI`) hosts the **VerityAI** academic MVP: register AI model fingerprints on a local EVM, verify integrity via SHA-256 comparison against on-chain records, and inspect provenance history.
 
-> **Milestone 2 (current):** SHA-256 hashing, upload validation, and safe local storage, plus health endpoints from Milestone 1. Smart contracts, auth, and full registration come later.
+> **Milestone 3 (current):** `ModelProvenance` smart contract, Hardhat tests, and local EVM deploy. Backend Web3 registration is Milestone 4.
 
 ## Stack
 
@@ -72,13 +72,23 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - Health: http://localhost:8000/api/v1/health
 - Blockchain health: http://localhost:8000/api/v1/health/blockchain
 
-### 4. Local Hardhat node (optional for M1 blockchain health = ok)
+### 4. Local Hardhat node + contract deploy
 
 ```bash
 cd blockchain
 npm install
 npx hardhat node
 ```
+
+In a second terminal:
+
+```bash
+cd blockchain
+npx hardhat run scripts/deploy.js --network localhost
+# or: npm run deploy:localhost
+```
+
+Copy the printed `ModelProvenance` address into `.env` as `BLOCKCHAIN_CONTRACT_ADDRESS`.
 
 With the node running, `GET /api/v1/health/blockchain` should report `"status": "ok"` and `"connected": true`. Without it, the endpoint correctly returns `"unavailable"` (never treated as a successful verification).
 
@@ -110,6 +120,9 @@ curl -s -F "file=@/tmp/demo.pt;type=application/octet-stream" \
 
 # Backend tests (health + hashing + storage)
 cd backend && source .venv/bin/activate && pytest -q
+
+# Smart contract tests
+cd ../blockchain && npx hardhat test
 ```
 
 Expected `/api/v1/health` payload shape:
@@ -131,8 +144,8 @@ Commit lockfiles; reinstall with `npm ci` / `pip install -r requirements.txt` fo
 | Milestone | Focus |
 | --- | --- |
 | 1 | Foundation (merged) |
-| **2** | SHA-256 hashing, upload validation, local storage (this PR) |
-| 3 | `ModelProvenance.sol`, Hardhat tests, local deploy |
+| 2 | SHA-256 hashing, upload validation, local storage (merged) |
+| **3** | `ModelProvenance.sol`, Hardhat tests, local deploy (this PR) |
 | 4 | Web3.py registration / verification integration |
 | 5 | PostgreSQL models, Alembic, auth, full API |
 | 6 | Dashboard, register/verify UI, history pages |

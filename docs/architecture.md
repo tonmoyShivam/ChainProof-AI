@@ -16,7 +16,7 @@ React (Vite)  →  FastAPI (/api/v1)  →  PostgreSQL
 | --- | --- | --- |
 | Frontend | `frontend/` | Vite + React + Tailwind scaffold; home page health probes |
 | Backend | `backend/` | FastAPI app; health + Milestone 2 hash/upload (`/api/v1/artifacts/*`) |
-| Blockchain | `blockchain/` | Hardhat 2.22 + Solidity 0.8.24 config (contracts in M3) |
+| Blockchain | `blockchain/` | Hardhat 2.22 + `ModelProvenance.sol` (local deploy in M3; Web3.py wiring in M4) |
 | Database | `docker-compose.yml` | PostgreSQL 16 |
 | Storage | `storage/` | Placeholder for off-chain model artifacts (M2) |
 
