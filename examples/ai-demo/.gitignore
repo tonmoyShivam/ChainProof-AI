@@ -1,0 +1,3 @@
+artifacts/*.tampered.json
+__pycache__/
+*.pyc

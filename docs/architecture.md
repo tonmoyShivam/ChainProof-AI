@@ -20,4 +20,6 @@ React (Vite)  →  FastAPI (/api/v1)  →  PostgreSQL
 | Database | `docker-compose.yml` | PostgreSQL 16 (SQLite fallback for local/tests) |
 | Storage | `storage/` | Placeholder for off-chain model artifacts (M2) |
 
-Full workflows (registration, verification, versioning) are specified in the project PRD and implemented in later milestones.
+Full workflows (registration, verification, versioning) are specified in the project PRD.
+
+Milestone 7 adds a safe JSON demo classifier under `examples/ai-demo/` that registers/verifies through the real API and refuses inference after integrity mismatch.
